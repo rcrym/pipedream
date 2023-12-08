@@ -45,15 +45,6 @@ interface PipeData {
     f: number;
 }
 
-// let pipes: Record<number, PipeData> = {
-//     0.9: { cost: 130000 },
-//     1.0: { cost: 180000 },
-//     1.1: { cost: 230000 },
-//     1.2: { cost: 290000 },
-//     1.3: { cost: 330000 },
-//     1.4: { cost: 380000 },
-// };
-
 const pipeDiameterToCost = (diameter: number) => {
     return 502857 * diameter - 321619;
 };
@@ -90,21 +81,6 @@ const calculateFrictionFactor = (Re: number, relativeRoughness: number) => {
     throw new Error("Failed to converge");
 };
 
-// for (let diameter in pipes) {
-//     let diameterFloat = parseFloat(diameter); // Convert to float if the key is a string
-//     pipes[diameter].relative_roughness = relative_roughness(diameterFloat);
-//     pipes[diameter].area = area(diameterFloat);
-//     pipes[diameter].q = constants.pump_flow;
-//     pipes[diameter].v =
-//         (pipes[diameter].q as number) / (pipes[diameter].v as number);
-//     pipes[diameter].Re =
-//         ((pipes[diameter].v as number) * diameterFloat * 1000) / 0.001;
-//     pipes[diameter].f = calculateFrictionFactor(
-//         pipes[diameter].Re as number,
-//         pipes[diameter].relative_roughness as number
-//     );
-// }
-
 let lowest_cost = Number.MAX_VALUE;
 let optimal_percent_bury: number = 0;
 let optimal_number_pumps: number = 0;
@@ -114,9 +90,7 @@ let optimal_EGL: number[] = [];
 
 
 for (let diameter = 1.09971599; diameter < 1.1; diameter += 0.000001) {
-// for (let diameter = 0.9; diameter < 1.4; diameter += 0.000001) {
 
-    // console.log(diameter);
     let pipe_cost = pipeDiameterToCost(diameter);
     let pipe_relative_roughness = relative_roughness(diameter);
     let pipe_area = area(diameter);
@@ -141,10 +115,8 @@ for (let diameter = 1.09971599; diameter < 1.1; diameter += 0.000001) {
         percent_bury <= 0.0001;
         percent_bury += 0.0000001
     ) {
-        // console.log(percent_bury);
         let d_plot: number[] = [];
         let straight_path_z_plot: number[] = [];
-
         let d = 0;
         let pump_here = [true];
         let pump_head = [100];
@@ -168,19 +140,14 @@ for (let diameter = 1.09971599; diameter < 1.1; diameter += 0.000001) {
         straight_path_z_plot.push(straight_path_z(d));
         d_plot.push(d);
 
-        // let percent_bury = 1;
-        let total_bury = 0; // total meters down of burying per 1 meter
+        let total_bury = 0;
         let d_step = 1;
         while (d + d_step < constants.L * 1000) {
             d += d_step;
             straight_path_z_plot.push(straight_path_z(d));
             d_plot.push(d);
-
-            // assume no pump
-            pump_here[d] = false;
-            // assume no bury
-            let bury_distance = 0;
-
+            pump_here[d] = false; // assume no pump
+            let bury_distance = 0; // assume no bury
             //compute
             let compute_next_row = () => {
                 pump_head[d] = pump_here[d] ? 100 : 0;
@@ -193,14 +160,11 @@ for (let diameter = 1.09971599; diameter < 1.1; diameter += 0.000001) {
                     (0.2 * 1000);
                 let deviation = z_meters[d] - straight_path_z_plot[d];
                 bury_distance = deviation * percent_bury;
-                // console.log(t)
+                // console.log(bury_distance)
                 z_meters[d] = z_meters[d] - bury_distance;
-
-                // console.log( deviation)
                 head_loss[d] =
                     (pipe.f * (d_step / pipe.diameter) * pipe.v ** 2) /
                     (2 * 9.81);
-                // f * (L/D) * v^2 / (2*g)
                 pressure_head[d] =
                     pump_head[d] +
                     pressure_head[d - 1] -
@@ -211,64 +175,33 @@ for (let diameter = 1.09971599; diameter < 1.1; diameter += 0.000001) {
                     (1000 * 9.81 * pressure_head[d]) / 1000;
             };
             compute_next_row();
-
-            // was no pump a good idea?
+            // Was no pump a good idea?
             if (pressure[d] < 30) {
-                // if not add pump
+                // If not add pump
                 pump_here[d] = true;
             }
 
             // Recompute potentially without a pump:
             compute_next_row();
 
-            // was a pump a good idea
+            // Was a pump a good idea?
             if (!pump_here[d] && pressure_head[d] > 200) {
-                // if not remove pump
+                // If not remove pump
                 pump_here[d] = false;
             }
             compute_next_row();
 
             HGL_plot.push(pressure_head[d] + z_meters[d]);
             EGL_plot.push(HGL_plot[d] + pipe.v ** 2 / (2 * 9.81));
-            // console.log(pipe.v ** 2 / (2 * 9.81))
             total_bury += bury_distance;
         }
 
-        // console.log(count)
-        // await createChart(d_plot, HGL_plot, "Z elevation");
-
-        // console.log(z_meters)
-        // console.log(d_plot.length);
-        // console.log(total_bury);
-        // console.log(pump_here.filter((value) => value).length);
-
         let number_of_pumps = pump_here.filter((value) => value).length;
         let cost_of_pumps = 15000000 * number_of_pumps;
-
         let cost_of_piping = pipe.cost * constants.L;
-
-        // $1000/km per meter depth
-        // $1/m per meter depth
-        let cost_of_burying = 1 * total_bury; // total m*meter depth
-        // console.log(total_bury)
-        // console.log(total_bury, cost_of_burying);
-
+        let cost_of_burying = 1 * total_bury; // $1/m * total m * meter depth
         let total_cost = cost_of_piping + cost_of_pumps + cost_of_burying;
 
-        // console.log(total_cost, number_of_pumps);
-        // console.log(pressure.filter((value) => value < 30));
-        // console.log(pressure_head.filter((value) => value > 200));
-        // d should be in meters I think. L is in km
-        // console.log(
-        //     "Diameter: ",
-        //     pipe.diameter,
-        //     "Percent Buried: ",
-        //     percent_bury,
-        //     "Number of pumps:",
-        //     number_of_pumps
-        // );
-        // console.log("Costs:", cost_of_piping, cost_of_burying, cost_of_pumps);
-        // console.log("Total Costs:", total_cost);
         if (total_cost < lowest_cost) {
             optimal_percent_bury = percent_bury;
             optimal_number_pumps = number_of_pumps;
@@ -298,28 +231,15 @@ for (let diameter = 1.09971599; diameter < 1.1; diameter += 0.000001) {
                     label: "EGL",
                     data: optimal_EGL,
                     borderColor: "blue",
-                    // borderWidth: 1,
-                    // pointRadius: 1,
-                    // backgroundColor: 'transparent',
                 },
-
                 // {
                 //     label: "HGL",
                 //     data: optimal_HGL,
                 //     borderColor: "green",
-                //     // borderWidth: 1,
-                //     // pointRadius: 1,
-                //     // backgroundColor: 'transparent',
                 // },
             ]);
         }
     }
-    // console.log(
-    //     lowest_cost,
-    //     optimal_percent_bury,
-    //     optimal_number_pumps,
-    //     optimal_pipe_diameter
-    // );
 }
 
 console.log(
@@ -328,4 +248,3 @@ console.log(
     optimal_number_pumps,
     optimal_pipe_diameter
 );
-// await createChart(d_plot, optimal_EGL, "Z elevation");
