@@ -17,6 +17,7 @@ const constants = {
     z_B: 0.5, // km
     fluid_density: 1000, // kg/m^3
     u: 0.001, // dynamic viscosity of the fluid,
+    parallel_pipes: true
 };
 
 const relative_roughness = (diameter_meters: number) => {
@@ -112,9 +113,32 @@ let optimal_pipe_diameter: number = Number.MAX_VALUE;
 let optimal_HGL: number[] = [];
 let optimal_EGL: number[] = [];
 
-for (let diameter = 1.09971599; diameter < 1.1; diameter += 0.000001) {
+
+// actual_diameters
+let inital_diameter =   0.7602;
+let max_diameter =      1.2;
+let increment =         0.00001;
+
+// if (constants.parallel_pipes) {
+//     inital_diameter *= 2 ** (2 / 5);
+//     max_diameter *= 2 ** (2 / 5);
+// }
+
+for (let diameter = inital_diameter; diameter < max_diameter; diameter += increment) {
+    console.log(diameter)
+    // above is the diameter selected for one of the individual pipes
+
     // console.log(diameter);
-    let pipe_cost = pipeDiameterToCost(diameter);
+    let pipe_cost = pipeDiameterToCost(diameter); // cost per meter
+
+    let effective_diameter = diameter * 2 ** (2 / 5);
+    let actual_diameter = diameter;
+    if (constants.parallel_pipes) {
+        pipe_cost *= 2; // twice the cost per meter since now it's two parallel pipes
+        diameter = effective_diameter // the effective diameter of these parallel pipes
+    }
+
+
     let pipe_relative_roughness = relative_roughness(diameter);
     let pipe_area = area(diameter);
     let pipe_q = constants.pump_flow;
@@ -135,9 +159,10 @@ for (let diameter = 1.09971599; diameter < 1.1; diameter += 0.000001) {
 
     for (
         let percent_bury = 0;
-        percent_bury <= 0.0001;
-        percent_bury += 0.0000001
+        percent_bury <= 0.000001 ;
+        percent_bury += 0.00000001
     ) {
+
         // console.log(percent_bury);
         let d_plot: number[] = [];
         let straight_path_z_plot: number[] = [];
@@ -206,11 +231,12 @@ for (let diameter = 1.09971599; diameter < 1.1; diameter += 0.000001) {
                 pressure[d] =
                     constants.absolute_atm_pressure +
                     (1000 * 9.81 * pressure_head[d]) / 1000;
+                // console.log(pressure[d])
             };
             compute_next_row();
 
             // was no pump a good idea?
-            if (pressure[d] < 30) {
+            if (pressure[d] < constants.min_absolute_pressure) {
                 // if not add pump
                 pump_here[d] = true;
             }
@@ -219,7 +245,7 @@ for (let diameter = 1.09971599; diameter < 1.1; diameter += 0.000001) {
             compute_next_row();
 
             // was a pump a good idea
-            if (!pump_here[d] && pressure_head[d] > 200) {
+            if (!pump_here[d] && pressure_head[d] > constants.maxPressure) {
                 // if not remove pump
                 pump_here[d] = false;
             }
@@ -227,7 +253,7 @@ for (let diameter = 1.09971599; diameter < 1.1; diameter += 0.000001) {
 
             HGL_plot.push(pressure_head[d] + z_meters[d]);
             EGL_plot.push(HGL_plot[d] + pipe.v ** 2 / (2 * 9.81));
-            console.log(pipe.v ** 2 / (2 * 9.81))
+            // console.log(pipe.v ** 2 / (2 * 9.81))
             total_bury += bury_distance;
         }
         // await createChart(d_plot, HGL_plot, "Z elevation");
@@ -273,8 +299,10 @@ for (let diameter = 1.09971599; diameter < 1.1; diameter += 0.000001) {
             lowest_cost = total_cost;
             console.log("-----CURRENT-OPTIMAL-----");
             console.log(
-                "Diameter: ",
+                "Effective Diameter: ",
                 pipe.diameter,
+                "Actual Diameter: ",
+                actual_diameter,
                 "Percent Buried: ",
                 percent_bury,
                 "Number of pumps:",
@@ -286,23 +314,24 @@ for (let diameter = 1.09971599; diameter < 1.1; diameter += 0.000001) {
                 cost_of_burying,
                 cost_of_pumps
             );
+            if(constants.parallel_pipes) console.log()
             console.log("Total Costs:", total_cost);
             console.log("---------------");
-            await createChart(d_plot, [
-                {
-                    label: "EGL",
-                    data: optimal_EGL,
-                    borderColor: "blue",
-                    // backgroundColor: 'transparent',
-                },
+            // await createChart(d_plot, [
+            //     {
+            //         label: "EGL",
+            //         data: optimal_EGL,
+            //         borderColor: "blue",
+            //         // backgroundColor: 'transparent',
+            //     },
 
-                {
-                    label: "HGL",
-                    data: optimal_HGL,
-                    borderColor: "green",
-                    // backgroundColor: 'transparent',
-                },
-            ]);
+            //     {
+            //         label: "HGL",
+            //         data: optimal_HGL,
+            //         borderColor: "green",
+            //         // backgroundColor: 'transparent',
+            //     },
+            // ]);
         }
     }
     // console.log(
@@ -311,6 +340,7 @@ for (let diameter = 1.09971599; diameter < 1.1; diameter += 0.000001) {
     //     optimal_number_pumps,
     //     optimal_pipe_diameter
     // );
+    diameter = actual_diameter;
 }
 
 console.log(
