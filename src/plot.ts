@@ -47,7 +47,7 @@ async function createChart(x_data: number[], datasets: ChartConfiguration["data"
         },
         title: {
           display: true,
-          text: 'EGL vs. Distance',
+          text: 'EGL vs. Distance (Single pipe)',
           color: 'black', // Darken the title text to black
           font: {
             size: 24, // Increase title font size
