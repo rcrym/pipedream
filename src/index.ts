@@ -112,7 +112,10 @@ let optimal_pipe_diameter: number = Number.MAX_VALUE;
 let optimal_HGL: number[] = [];
 let optimal_EGL: number[] = [];
 
+
 for (let diameter = 1.09971599; diameter < 1.1; diameter += 0.000001) {
+// for (let diameter = 0.9; diameter < 1.4; diameter += 0.000001) {
+
     // console.log(diameter);
     let pipe_cost = pipeDiameterToCost(diameter);
     let pipe_relative_roughness = relative_roughness(diameter);
@@ -227,9 +230,11 @@ for (let diameter = 1.09971599; diameter < 1.1; diameter += 0.000001) {
 
             HGL_plot.push(pressure_head[d] + z_meters[d]);
             EGL_plot.push(HGL_plot[d] + pipe.v ** 2 / (2 * 9.81));
-            console.log(pipe.v ** 2 / (2 * 9.81))
+            // console.log(pipe.v ** 2 / (2 * 9.81))
             total_bury += bury_distance;
         }
+
+        // console.log(count)
         // await createChart(d_plot, HGL_plot, "Z elevation");
 
         // console.log(z_meters)
@@ -293,15 +298,19 @@ for (let diameter = 1.09971599; diameter < 1.1; diameter += 0.000001) {
                     label: "EGL",
                     data: optimal_EGL,
                     borderColor: "blue",
+                    // borderWidth: 1,
+                    // pointRadius: 1,
                     // backgroundColor: 'transparent',
                 },
 
-                {
-                    label: "HGL",
-                    data: optimal_HGL,
-                    borderColor: "green",
-                    // backgroundColor: 'transparent',
-                },
+                // {
+                //     label: "HGL",
+                //     data: optimal_HGL,
+                //     borderColor: "green",
+                //     // borderWidth: 1,
+                //     // pointRadius: 1,
+                //     // backgroundColor: 'transparent',
+                // },
             ]);
         }
     }
