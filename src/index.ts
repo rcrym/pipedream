@@ -115,9 +115,9 @@ let optimal_EGL: number[] = [];
 
 
 // actual_diameters
-let inital_diameter =   0.7602;
+let inital_diameter =   0.76026;
 let max_diameter =      1.2;
-let increment =         0.00001;
+let increment =         0.000001;
 
 // if (constants.parallel_pipes) {
 //     inital_diameter *= 2 ** (2 / 5);
@@ -317,21 +317,21 @@ for (let diameter = inital_diameter; diameter < max_diameter; diameter += increm
             if(constants.parallel_pipes) console.log()
             console.log("Total Costs:", total_cost);
             console.log("---------------");
-            // await createChart(d_plot, [
-            //     {
-            //         label: "EGL",
-            //         data: optimal_EGL,
-            //         borderColor: "blue",
-            //         // backgroundColor: 'transparent',
-            //     },
+            await createChart(d_plot, [
+                {
+                    label: "EGL",
+                    data: optimal_EGL,
+                    borderColor: "blue",
+                    // backgroundColor: 'transparent',
+                },
 
-            //     {
-            //         label: "HGL",
-            //         data: optimal_HGL,
-            //         borderColor: "green",
-            //         // backgroundColor: 'transparent',
-            //     },
-            // ]);
+                // {
+                //     label: "HGL",
+                //     data: optimal_HGL,
+                //     borderColor: "green",
+                //     // backgroundColor: 'transparent',
+                // },
+            ]);
         }
     }
     // console.log(
