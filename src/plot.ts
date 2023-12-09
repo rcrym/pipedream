@@ -29,8 +29,6 @@ async function createChart(x_data: number[], datasets: ChartConfiguration["data"
           type: "linear",
           ticks: {
             stepSize: 10000,
-            // sampleSize: 10,
-            // autoSkip: false,
             color: 'black', // Darken the x-axis tick labels to black
           },
           grid: {
