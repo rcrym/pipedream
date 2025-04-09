@@ -112,9 +112,8 @@ let optimal_pipe_diameter: number = Number.MAX_VALUE;
 let optimal_HGL: number[] = [];
 let optimal_EGL: number[] = [];
 
-
 for (let diameter = 1.09971599; diameter < 1.1; diameter += 0.000001) {
-// for (let diameter = 0.9; diameter < 1.4; diameter += 0.000001) {
+    // for (let diameter = 0.9; diameter < 1.4; diameter += 0.000001) {
 
     // console.log(diameter);
     let pipe_cost = pipeDiameterToCost(diameter);
@@ -276,23 +275,38 @@ for (let diameter = 1.09971599; diameter < 1.1; diameter += 0.000001) {
             optimal_EGL = EGL_plot;
             optimal_HGL = HGL_plot;
             lowest_cost = total_cost;
-            console.log("-----CURRENT-OPTIMAL-----");
+            console.log("===== CURRENT OPTIMAL SOLUTION =====");
+            console.log(`Diameter        : ${pipe.diameter.toFixed(6)} m`);
             console.log(
-                "Diameter: ",
-                pipe.diameter,
-                "Percent Buried: ",
-                percent_bury,
-                "Number of pumps:",
-                number_of_pumps
+                `Percent Buried  : ${(percent_bury * 100).toFixed(6)} %`
+            );
+            console.log(`Number of Pumps : ${number_of_pumps}`);
+            console.log("");
+            console.log("---- Cost Breakdown ----");
+            console.log(
+                `Pipe Cost       : $${cost_of_piping.toLocaleString(undefined, {
+                    maximumFractionDigits: 2,
+                })}`
             );
             console.log(
-                "Costs:",
-                cost_of_piping,
-                cost_of_burying,
-                cost_of_pumps
+                `Burial Cost     : $${cost_of_burying.toLocaleString(
+                    undefined,
+                    { maximumFractionDigits: 2 }
+                )}`
             );
-            console.log("Total Costs:", total_cost);
-            console.log("---------------");
+            console.log(
+                `Pump Cost       : $${cost_of_pumps.toLocaleString(undefined, {
+                    maximumFractionDigits: 2,
+                })}`
+            );
+            console.log("--------------------------");
+            console.log(
+                `Total Cost      : $${total_cost.toLocaleString(undefined, {
+                    maximumFractionDigits: 2,
+                })}`
+            );
+            console.log("=====================================\n");
+
             await createChart(d_plot, [
                 {
                     label: "EGL",
